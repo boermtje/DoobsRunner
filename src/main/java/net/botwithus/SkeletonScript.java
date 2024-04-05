@@ -44,13 +44,32 @@ public class SkeletonScript extends LoopingScript {
     enum BotState {
         //define your own states here
         IDLE,
-        SKILLING,
+        SLICING,
         BANKING,
         //...
     }
 
+    //Make a hashmap for different slices and their different ComponentID1 2 3
+    private final Map<String, List<Integer>> sliceMap = new HashMap<>();
+    private String selectedSlicable = "Pineapple ring"; // Default selection
+    public String[] getSlicableNames() {
+        return sliceMap.keySet().toArray(new String[0]);
+    }
+
+    // Method to set the selected slicable
+    public void setSelectedSlicable(String slicable) {
+        if (sliceMap.containsKey(slicable)) {
+            this.selectedSlicable = slicable;
+        }
+    }
+
     public SkeletonScript(String s, ScriptConfig scriptConfig, ScriptDefinition scriptDefinition) {
         super(s, scriptConfig, scriptDefinition);
+        sliceMap.put("Pineapple ring", List.of(1, 49, 89849878));
+        sliceMap.put("Sliced banana", List.of(1, 65, 89849878));
+        sliceMap.put("Watermelon slice", List.of(1, 61, 89849878));
+        sliceMap.put("Orange slice", List.of(1, 41, 89849878));
+        sliceMap.put("Orange chunks", List.of(1, 37, 89849878));
         this.sgc = new SkeletonScriptGraphicsContext(getConsole(), this);
     }
 
@@ -67,8 +86,8 @@ public class SkeletonScript extends LoopingScript {
                 println("We're idle!");
                 Execution.delay(random.nextLong(1000, 3000));
             }
-            case SKILLING -> {
-                Execution.delay(handleSkilling(player));
+            case SLICING -> {
+                Execution.delay(handleSlicing(player));
             }
             case BANKING -> {
                 Execution.delay(Banking());
@@ -76,21 +95,23 @@ public class SkeletonScript extends LoopingScript {
         }
     }
 
-    private long handleSkilling(LocalPlayer player) {
-        Item Gleaming = InventoryItemQuery.newQuery(93).name("Gleaming energy").results().first();
-        if (Gleaming == null) {
-            println("We don't have any Gleaming energy in our inventory.");
+    private long handleSlicing(LocalPlayer player) {
+        Item Slicable = InventoryItemQuery.newQuery(93).option("Slice").results().first();
+        if (Slicable == null) {
+            println("We don't have any Slicables energy in our inventory.");
             botState = BotState.BANKING;
-            return random.nextLong(500,1000);
-        }
-        else {
-            println("We have Gleaming energy in our inventory.");
-            Backpack.interact(Gleaming.getName(), "Weave");
+            return random.nextLong(500, 1000);
+        } else {
+            List<Integer> componentIDs = sliceMap.get(selectedSlicable);
             Execution.delay(random.nextLong(500, 1000));
-            MiniMenu.interact(ComponentAction.COMPONENT.getType(), 1, 21, 89849878);
+            println("Interacting with fruit: " + Backpack.interact(Slicable.getName(), "Slice"));
             Execution.delay(random.nextLong(500, 1000));
-            MiniMenu.interact(ComponentAction.DIALOGUE.getType(), 0, -1, 89784350);
-            return random.nextLong(10000,12000);
+            println("Selecting end product: " + MiniMenu.interact(ComponentAction.COMPONENT.getType(), componentIDs.get(0), componentIDs.get(1), componentIDs.get(2))) ;
+            Execution.delay(random.nextLong(2000, 3000));
+            println("Start cutting: " + MiniMenu.interact(ComponentAction.DIALOGUE.getType(), 0, -1, 89784350));
+            Execution.delay(random.nextLong(2000, 3000));
+            delayUntil(35000, () -> !Interfaces.isOpen(1251));
+            return random.nextLong(500, 1000);
         }
     }
 
@@ -99,17 +120,32 @@ public class SkeletonScript extends LoopingScript {
         SceneObject bankBooth = SceneObjectQuery.newQuery().option("Load Last Preset from").results().nearest();
         if (banks != null) {
             println("Yay, we found our bank.");
-
             println("Interacted bank: " + banks.interact("Load Last Preset from"));
+            Execution.delay(random.nextLong(500, 1000));
+            Item Slicable = InventoryItemQuery.newQuery(93).option("Slice").results().first();
+            if (Slicable == null) {
+                println("We don't have any Slicables in our inventory.");
+                Execution.delay(random.nextLong(500, 2000));
+                botState = BotState.IDLE;
+                return random.nextLong(500, 1000);
+            }
             Execution.delay(random.nextLong(500, 2000));
-            botState = BotState.SKILLING;
+            botState = BotState.SLICING;
         }
         else if (bankBooth != null) {
             println("Yay, we found our bank booth.");
             Execution.delay(random.nextLong(500, 1000));
             println("Interacted bank booth: " + bankBooth.interact("Load Last Preset from"));
+            Execution.delay(random.nextLong(500, 1000));
+            Item Slicable = InventoryItemQuery.newQuery(93).option("Slice").results().first();
+            if (Slicable == null) {
+                println("We don't have any Slicables in our inventory.");
+                Execution.delay(random.nextLong(500, 2000));
+                botState = BotState.IDLE;
+                return random.nextLong(500, 1000);
+            }
             Execution.delay(random.nextLong(500, 2000));
-            botState = BotState.SKILLING;
+            botState = BotState.SLICING;
         }
         else {
             println("Bank was null.");

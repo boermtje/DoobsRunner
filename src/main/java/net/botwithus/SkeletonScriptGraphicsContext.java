@@ -12,6 +12,7 @@ import java.util.Map;
 
 public class SkeletonScriptGraphicsContext extends ScriptGraphicsContext {
     private SkeletonScript script;
+    private NativeInteger selectedSlicableIndex = new NativeInteger(0);
 
     public SkeletonScriptGraphicsContext(ScriptConsole scriptConsole, SkeletonScript script) {
         super(scriptConsole);
@@ -21,21 +22,26 @@ public class SkeletonScriptGraphicsContext extends ScriptGraphicsContext {
 
     @Override
     public void drawSettings () {
-        if (ImGui.Begin("TransmuteDiamonds", ImGuiWindowFlag.None.getValue())) {
+        if (ImGui.Begin("DoobsRunner", ImGuiWindowFlag.None.getValue())) {
             if (ImGui.BeginTabBar("My bar", ImGuiWindowFlag.None.getValue())) {
-                if (ImGui.BeginTabItem("Transmute", ImGuiWindowFlag.None.getValue())) {
-                    ImGui.Text("My scripts state is: " + script.getBotState());
-                    if (ImGui.Button("Start")) {
-                        //button has been clicked
-                        script.setBotState(SkeletonScript.BotState.SKILLING);
+                    if (ImGui.BeginTabItem("Slicer", ImGuiWindowFlag.None.getValue())) {
+                        ImGui.Text("My scripts state is: " + script.getBotState());
+                        if (ImGui.Button("Start")) {
+                            //button has been clicked
+                            script.setBotState(SkeletonScript.BotState.SLICING);
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.Button("Stop")) {
+                            //has been clicked
+                            script.setBotState(SkeletonScript.BotState.IDLE);
+                        }
+                        // Slicable selection combo box
+                        String[] slicables = script.getSlicableNames();
+                        if (ImGui.Combo("What to slice", selectedSlicableIndex, slicables)) {
+                            script.setSelectedSlicable(slicables[selectedSlicableIndex.get()]);
+                        }
+                        ImGui.EndTabItem();
                     }
-                    ImGui.SameLine();
-                    if (ImGui.Button("Stop")) {
-                        //has been clicked
-                        script.setBotState(SkeletonScript.BotState.IDLE);
-                    }
-                    ImGui.EndTabItem();
-                }
                 ImGui.EndTabBar();
             }
             ImGui.End();

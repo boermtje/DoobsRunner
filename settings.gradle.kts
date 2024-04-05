@@ -1,2 +1,2 @@
-rootProject.name = "TransmuteDiamonds"
+rootProject.name = "DoobsRunner"
 
