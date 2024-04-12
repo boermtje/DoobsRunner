@@ -288,12 +288,13 @@ public class SkeletonScript extends LoopingScript {
         Item cheesewheel = InventoryItemQuery.newQuery(93).name(cheesewheels).results().first();
         Item cheese = InventoryItemQuery.newQuery(93).ids(1985).results().first();
         Area.Singular swamp = new Area.Singular(new Coordinate(3494,3455,0));
-        if (Movement.traverse(NavPath.resolve(swamp).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+        if (cheesewheel == null && cheese == null) {
+            Execution.delay(random.nextLong(500, 1000));
+            botState = BotState.BANKROT;
+        }
+        else if (Movement.traverse(NavPath.resolve(swamp).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
             println("Traversed to swamp");
-            if (cheesewheel == null && cheese == null) {
-                Execution.delay(random.nextLong(500, 1000));
-                botState = BotState.BANKROT;
-            } else if (cheese == null) {
+            if (cheese == null) {
                 Execution.delay(random.nextLong(500, 1000));
                 Backpack.interact(cheesewheel.getName(), "Slice");
                 Execution.delay(random.nextLong(500, 1000));
