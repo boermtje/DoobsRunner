@@ -42,6 +42,43 @@ public class SkeletonScriptGraphicsContext extends ScriptGraphicsContext {
                         }
                         ImGui.EndTabItem();
                     }
+                if (ImGui.BeginTabItem("Benny's News", ImGuiWindowFlag.None.getValue())) {
+                    if (ImGui.Button("Start")) {
+                        //button has been clicked
+                        script.setBotState(SkeletonScript.BotState.NEWS);
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button("Stop")) {
+                        //has been clicked
+                        script.setBotState(SkeletonScript.BotState.IDLE);
+                    }
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("Stews", ImGuiWindowFlag.None.getValue())) {
+                    if (ImGui.Button("Start")) {
+                        //button has been clicked
+                        script.setBotState(SkeletonScript.BotState.STEWS);
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button("Stop")) {
+                        //has been clicked
+                        script.setBotState(SkeletonScript.BotState.IDLE);
+                    }
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("Rotting", ImGuiWindowFlag.None.getValue())) {
+                    if (ImGui.Button("Start")) {
+                        //button has been clicked
+                        script.setBotState(SkeletonScript.BotState.STEWS);
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button("Stop")) {
+                        //has been clicked
+                        script.setBotState(SkeletonScript.BotState.ROTTING);
+                    }
+                    ImGui.Text("Load preset once and then it'll use: Last Loaded Preset from");
+                    ImGui.EndTabItem();
+                }
                 ImGui.EndTabBar();
             }
             ImGui.End();

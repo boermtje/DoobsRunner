@@ -1,5 +1,6 @@
 package net.botwithus;
 
+import net.botwithus.api.game.hud.Dialog;
 import net.botwithus.api.game.hud.inventories.Backpack;
 import net.botwithus.api.game.hud.inventories.Bank;
 import net.botwithus.api.game.hud.inventories.Inventory;
@@ -13,6 +14,7 @@ import net.botwithus.rs3.game.hud.interfaces.Component;
 import net.botwithus.rs3.game.hud.interfaces.Interfaces;
 import net.botwithus.rs3.game.minimenu.MiniMenu;
 import net.botwithus.rs3.game.minimenu.actions.ComponentAction;
+import net.botwithus.rs3.game.minimenu.actions.SelectableAction;
 import net.botwithus.rs3.game.movement.Movement;
 import net.botwithus.rs3.game.movement.NavPath;
 import net.botwithus.rs3.game.movement.TraverseEvent;
@@ -46,6 +48,12 @@ public class SkeletonScript extends LoopingScript {
         IDLE,
         SLICING,
         BANKING,
+        NEWS,
+        NEWSBANK,
+        STEWS,
+        STEWSBANK,
+        ROTTING,
+        BANKROT,
         //...
     }
 
@@ -91,6 +99,24 @@ public class SkeletonScript extends LoopingScript {
             }
             case BANKING -> {
                 Execution.delay(Banking());
+            }
+            case STEWS -> {
+                Execution.delay(handleStews(player));
+            }
+            case STEWSBANK -> {
+                Execution.delay(StewBanking());
+            }
+            case NEWS -> {
+                Execution.delay(handleNews(player));
+            }
+            case NEWSBANK -> {
+                Execution.delay(NewsBanking());
+            }
+            case ROTTING -> {
+                Execution.delay(HandleRotting());
+            }
+            case BANKROT -> {
+                Execution.delay(RotBank());
             }
         }
     }
@@ -151,6 +177,156 @@ public class SkeletonScript extends LoopingScript {
             println("Bank was null.");
         }
         return random.nextLong(1500,3000);
+    }
+
+    private long handleNews(LocalPlayer player) {
+        Area.Rectangular news = new Area.Rectangular(new Coordinate(3216,3429,0), new Coordinate(3222,3435,0));
+        if (Movement.traverse(NavPath.resolve(news).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to news");
+            if (Backpack.isFull()) {
+                println("Backpack full");
+                botState = BotState.NEWSBANK;
+                return random.nextLong(500, 1000);
+            } else {
+                Npc Benny = NpcQuery.newQuery().name("Benny").results().nearest();
+                Execution.delay(random.nextLong(500, 1000));
+                Benny.interact("Talk to");
+                Execution.delay(random.nextLong(500, 1000));
+                if (Dialog.isOpen());
+                {
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.interact("Can I have a newspaper, please?");
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.select();
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.select();
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.interact("Sure, here you go.");
+                    return random.nextLong(500, 1000);
+                }
+            }
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private long NewsBanking(){
+        Area.Rectangular bank = new Area.Rectangular(new Coordinate(3189,3435,0), new Coordinate(3187,3443,0));
+        SceneObject banks = SceneObjectQuery.newQuery().name("Bank booth").results().nearest();
+        if (Movement.traverse(NavPath.resolve(bank).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to bank");
+            if (banks != null) {
+                Execution.delay(random.nextLong(500, 1000));
+                banks.interact("Bank");
+                Execution.delay(random.nextLong(500, 1000));
+                Bank.depositAll();
+            }
+            if (Backpack.isEmpty());{
+                botState = BotState.NEWS;
+            }
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private long handleStews(LocalPlayer player) {
+        Area.Rectangular stews = new Area.Rectangular(new Coordinate(2693,3498,0), new Coordinate(2689,3488,0));
+        if (Movement.traverse(NavPath.resolve(stews).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to stews");
+            if (Backpack.isFull()) {
+                println("Backpack full");
+                botState = BotState.STEWSBANK;
+                return random.nextLong(500, 1000);
+            } else {
+                Npc Bartender = NpcQuery.newQuery().name("Bartender").results().nearest();
+                Execution.delay(random.nextLong(500, 1000));
+                Bartender.interact("Talk-to");
+                Execution.delay(random.nextLong(500, 1000));
+                if (Dialog.isOpen()) ;
+                {
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.select();
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.interact("What do you have?");
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.select();
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.select();
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.interact("Could I have some stew please?");
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.select();
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.select();
+                    Execution.delay(random.nextLong(500, 1000));
+                    Dialog.select();
+                    return random.nextLong(500, 1000);
+                }
+            }
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private long StewBanking(){
+        Area.Rectangular bank = new Area.Rectangular(new Coordinate(2722,3491,0), new Coordinate(2730,3493,0));
+        SceneObject banks = SceneObjectQuery.newQuery().name("Bank booth").results().nearest();
+        if (Movement.traverse(NavPath.resolve(bank).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to bank");
+            if (banks != null) {
+                Execution.delay(random.nextLong(500, 1000));
+                banks.interact("Bank");
+                Execution.delay(random.nextLong(500, 1000));
+                Bank.depositAll();
+            }
+            if (Backpack.isEmpty());{
+                botState = BotState.STEWS;
+            }
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private long HandleRotting(){
+        Pattern cheesewheels = Regex.getPatternForContainsString("Cheese wheel");
+        Item cheesewheel = InventoryItemQuery.newQuery(93).name(cheesewheels).results().first();
+        Item cheese = InventoryItemQuery.newQuery(93).ids(1985).results().first();
+        Area.Singular swamp = new Area.Singular(new Coordinate(3494,3455,0));
+        if (Movement.traverse(NavPath.resolve(swamp).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to swamp");
+            if (cheesewheel == null && cheese == null) {
+                Execution.delay(random.nextLong(500, 1000));
+                botState = BotState.BANKROT;
+            } else if (cheese == null) {
+                Execution.delay(random.nextLong(500, 1000));
+                Backpack.interact(cheesewheel.getName(), "Slice");
+                Execution.delay(random.nextLong(500, 1000));
+                Backpack.interact(cheesewheel.getName(), "Slice");
+                Execution.delay(random.nextLong(500, 1000));
+                Backpack.interact(cheesewheel.getName(), "Slice");
+                Execution.delay(random.nextLong(500, 1000));
+                Backpack.interact(cheesewheel.getName(), "Slice");
+            } else if (Backpack.isFull()){
+                Execution.delay(random.nextLong(500, 1000));
+                Item notePaper = InventoryItemQuery.newQuery().name("Magic notepaper").results().first();
+                MiniMenu.interact(SelectableAction.SELECTABLE_COMPONENT.getType(), 0, notePaper.getSlot(), 96534533);
+                println("Selected NotePaper");
+                Execution.delay(random.nextLong(500, 1000));
+                Item rottenfood = InventoryItemQuery.newQuery().name("Rotten food").results().first();
+                MiniMenu.interact(SelectableAction.SELECT_COMPONENT_ITEM.getType(), 0, rottenfood.getSlot(), 96534533);
+                println("Selected " + rottenfood);
+            }
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private long RotBank(){
+        Area.Singular bankarea = new Area.Singular(new Coordinate(3362,3397,0));
+        SceneObject bank = SceneObjectQuery.newQuery().name("Bank chest").results().nearest();
+        if (Movement.traverse(NavPath.resolve(bankarea).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to bank");
+            if (bank != null) {
+                Execution.delay(random.nextLong(500, 1000));
+                bank.interact("Load Last Preset from");
+            }
+        }
+        return random.nextLong(500, 1000);
     }
 
     ////////////////////Botstate/////////////////////
