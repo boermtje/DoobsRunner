@@ -3,14 +3,10 @@ package net.botwithus;
 import net.botwithus.api.game.hud.Dialog;
 import net.botwithus.api.game.hud.inventories.Backpack;
 import net.botwithus.api.game.hud.inventories.Bank;
-import net.botwithus.api.game.hud.inventories.Inventory;
 import net.botwithus.internal.scripts.ScriptDefinition;
-import net.botwithus.rs3.events.impl.InventoryUpdateEvent;
-import net.botwithus.rs3.events.impl.SkillUpdateEvent;
 import net.botwithus.rs3.game.Area;
 import net.botwithus.rs3.game.Client;
 import net.botwithus.rs3.game.Item;
-import net.botwithus.rs3.game.hud.interfaces.Component;
 import net.botwithus.rs3.game.hud.interfaces.Interfaces;
 import net.botwithus.rs3.game.minimenu.MiniMenu;
 import net.botwithus.rs3.game.minimenu.actions.ComponentAction;
@@ -19,14 +15,11 @@ import net.botwithus.rs3.game.movement.Movement;
 import net.botwithus.rs3.game.movement.NavPath;
 import net.botwithus.rs3.game.movement.TraverseEvent;
 import net.botwithus.rs3.game.queries.builders.characters.NpcQuery;
-import net.botwithus.rs3.game.queries.builders.components.ComponentQuery;
 import net.botwithus.rs3.game.queries.builders.items.InventoryItemQuery;
 import net.botwithus.rs3.game.queries.builders.objects.SceneObjectQuery;
-import net.botwithus.rs3.game.queries.results.ResultSet;
 import net.botwithus.rs3.game.scene.entities.characters.npc.Npc;
 import net.botwithus.rs3.game.scene.entities.characters.player.LocalPlayer;
 import net.botwithus.rs3.game.scene.entities.object.SceneObject;
-import net.botwithus.rs3.game.skills.Skills;
 import net.botwithus.rs3.script.Execution;
 import net.botwithus.rs3.script.LoopingScript;
 import net.botwithus.rs3.script.config.ScriptConfig;
@@ -35,7 +28,6 @@ import net.botwithus.rs3.util.Regex;
 
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class SkeletonScript extends LoopingScript {
@@ -54,6 +46,8 @@ public class SkeletonScript extends LoopingScript {
         STEWSBANK,
         ROTTING,
         BANKROT,
+        CABBAGE,
+        CABBAGEBANK
         //...
     }
 
@@ -117,6 +111,12 @@ public class SkeletonScript extends LoopingScript {
             }
             case BANKROT -> {
                 Execution.delay(RotBank());
+            }
+            case CABBAGE -> {
+                Execution.delay(handlecabbage());
+            }
+            case CABBAGEBANK -> {
+                Execution.delay(CabbageBanking());
             }
         }
     }
@@ -325,6 +325,49 @@ public class SkeletonScript extends LoopingScript {
             if (bank != null) {
                 Execution.delay(random.nextLong(500, 1000));
                 bank.interact("Load Last Preset from");
+            }
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private long handlecabbage(){
+        SceneObject cabbage = SceneObjectQuery.newQuery().name("Cabbage").results().nearest();
+        Area cabbages = new Area.Rectangular(new Coordinate(3067, 3285, 0), new Coordinate(3043, 3298, 0));
+        if (Backpack.isFull()) {
+            botState = BotState.CABBAGEBANK;
+        }
+        if (Movement.traverse(NavPath.resolve(cabbages).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to cabbages");
+            if (cabbage != null) {
+                Execution.delay(random.nextLong(500, 1000));
+                cabbage.interact("Pick");
+            }
+            else if (Backpack.contains(39)){
+                println("Cabbage was null making arrows.");
+                Execution.delay(random.nextLong(500, 1000));
+                Backpack.interact(39, "Tip");
+                Execution.delay(random.nextLong(500, 1000));
+                MiniMenu.interact(ComponentAction.DIALOGUE.getType(), 0, -1, 89784350);
+                delayUntil(35000, () -> !Interfaces.isOpen(1251));
+                return random.nextLong(500, 1000);
+            }
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private long CabbageBanking(){
+        Area.Rectangular bank = new Area.Rectangular(new Coordinate(2722,3491,0), new Coordinate(2730,3493,0));
+        SceneObject banks = SceneObjectQuery.newQuery().name("Counter").results().nearest();
+        if (Movement.traverse(NavPath.resolve(bank).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to bank");
+            if (banks != null) {
+                Execution.delay(random.nextLong(500, 1000));
+                banks.interact("Bank");
+                Execution.delay(random.nextLong(500, 1000));
+                Bank.depositAllExcept(53,39);
+            }
+            if (!Backpack.contains(1965));{
+                botState = BotState.CABBAGE;
             }
         }
         return random.nextLong(500, 1000);
