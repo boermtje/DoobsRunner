@@ -62,7 +62,7 @@ public class SkeletonScript extends LoopingScript {
     public String[] getSlicableNames() {
         return sliceMap.keySet().toArray(new String[0]);
     }
-    Area cabbages = new Area.Rectangular(new Coordinate(3067, 3285, 0), new Coordinate(3043, 3298, 0));
+    Area cabbages = new Area.Rectangular(new Coordinate(3084, 3366, 0), new Coordinate(3087, 3362, 0));
 
     // Method to set the selected slicable
     public void setSelectedSlicable(String slicable) {
@@ -344,14 +344,22 @@ public class SkeletonScript extends LoopingScript {
 
     private long handlecabbage(LocalPlayer player){
         SceneObject cabbage = SceneObjectQuery.newQuery().name("Cabbage").results().nearest();
-        if (Backpack.isFull()) {
-            botState = BotState.CABBAGEBANK;
+        if (Backpack.isFull()){
+            Execution.delay(random.nextLong(500, 1000));
+            Item notePaper = InventoryItemQuery.newQuery().name("Magic notepaper").results().first();
+            MiniMenu.interact(SelectableAction.SELECTABLE_COMPONENT.getType(), 0, notePaper.getSlot(), 96534533);
+            println("Selected NotePaper");
+            Execution.delay(random.nextLong(500, 1000));
+            Item Cabbage = InventoryItemQuery.newQuery().name("Cabbage").results().first();
+            MiniMenu.interact(SelectableAction.SELECT_COMPONENT_ITEM.getType(), 0, Cabbage.getSlot(), 96534533);
+            println("Selected " + Cabbage);
         }
         if (cabbages.contains(player)) {
-            println("We are at cabbages");
+            println("We at cabbage patch");
             if (cabbage != null) {
                 Execution.delay(random.nextLong(500, 1000));
                 cabbage.interact("Pick");
+                Execution.delay(random.nextLong(3000, 4000));
             }
             else if (Backpack.contains(39)){
                 println("Cabbage was null making arrows.");
@@ -370,8 +378,7 @@ public class SkeletonScript extends LoopingScript {
     }
 
     private long CabbageTraverse(){
-        Area.Rectangular cabbage = new Area.Rectangular(new Coordinate(3067, 3285, 0), new Coordinate(3043, 3298, 0));
-        if (Movement.traverse(NavPath.resolve(cabbage).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+        if (Movement.traverse(NavPath.resolve(cabbages).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
             println("Traversed to cabbages");
             botState = BotState.CABBAGE;
         }
