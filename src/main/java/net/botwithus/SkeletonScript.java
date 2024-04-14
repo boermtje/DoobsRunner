@@ -7,6 +7,7 @@ import net.botwithus.internal.scripts.ScriptDefinition;
 import net.botwithus.rs3.game.Area;
 import net.botwithus.rs3.game.Client;
 import net.botwithus.rs3.game.Item;
+import net.botwithus.rs3.game.hud.interfaces.Component;
 import net.botwithus.rs3.game.hud.interfaces.Interfaces;
 import net.botwithus.rs3.game.minimenu.MiniMenu;
 import net.botwithus.rs3.game.minimenu.actions.ComponentAction;
@@ -15,6 +16,7 @@ import net.botwithus.rs3.game.movement.Movement;
 import net.botwithus.rs3.game.movement.NavPath;
 import net.botwithus.rs3.game.movement.TraverseEvent;
 import net.botwithus.rs3.game.queries.builders.characters.NpcQuery;
+import net.botwithus.rs3.game.queries.builders.components.ComponentQuery;
 import net.botwithus.rs3.game.queries.builders.items.InventoryItemQuery;
 import net.botwithus.rs3.game.queries.builders.objects.SceneObjectQuery;
 import net.botwithus.rs3.game.scene.entities.characters.npc.Npc;
@@ -31,6 +33,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class SkeletonScript extends LoopingScript {
+    private Pattern woodboxPattern = Regex.getPatternForContainingOneOf("Wood box", "wood box");
     private BotState botState = BotState.IDLE;
     private Random random = new Random();
 
@@ -47,7 +50,9 @@ public class SkeletonScript extends LoopingScript {
         ROTTING,
         BANKROT,
         CABBAGE,
-        CABBAGEBANK
+        CABBAGEBANK,
+        CABBAGETRAVERSE,
+        WOODCUT
         //...
     }
 
@@ -57,6 +62,7 @@ public class SkeletonScript extends LoopingScript {
     public String[] getSlicableNames() {
         return sliceMap.keySet().toArray(new String[0]);
     }
+    Area cabbages = new Area.Rectangular(new Coordinate(3067, 3285, 0), new Coordinate(3043, 3298, 0));
 
     // Method to set the selected slicable
     public void setSelectedSlicable(String slicable) {
@@ -113,10 +119,16 @@ public class SkeletonScript extends LoopingScript {
                 Execution.delay(RotBank());
             }
             case CABBAGE -> {
-                Execution.delay(handlecabbage());
+                Execution.delay(handlecabbage(player));
             }
             case CABBAGEBANK -> {
                 Execution.delay(CabbageBanking());
+            }
+            case CABBAGETRAVERSE -> {
+                Execution.delay(CabbageTraverse());
+            }
+            case WOODCUT -> {
+                Execution.delay(handleWoodcutting(player));
             }
         }
     }
@@ -330,14 +342,13 @@ public class SkeletonScript extends LoopingScript {
         return random.nextLong(500, 1000);
     }
 
-    private long handlecabbage(){
+    private long handlecabbage(LocalPlayer player){
         SceneObject cabbage = SceneObjectQuery.newQuery().name("Cabbage").results().nearest();
-        Area cabbages = new Area.Rectangular(new Coordinate(3067, 3285, 0), new Coordinate(3043, 3298, 0));
         if (Backpack.isFull()) {
             botState = BotState.CABBAGEBANK;
         }
-        if (Movement.traverse(NavPath.resolve(cabbages).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
-            println("Traversed to cabbages");
+        if (cabbages.contains(player)) {
+            println("We are at cabbages");
             if (cabbage != null) {
                 Execution.delay(random.nextLong(500, 1000));
                 cabbage.interact("Pick");
@@ -351,6 +362,18 @@ public class SkeletonScript extends LoopingScript {
                 delayUntil(35000, () -> !Interfaces.isOpen(1251));
                 return random.nextLong(500, 1000);
             }
+        }
+        else {
+            botState = BotState.CABBAGETRAVERSE;
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private long CabbageTraverse(){
+        Area.Rectangular cabbage = new Area.Rectangular(new Coordinate(3067, 3285, 0), new Coordinate(3043, 3298, 0));
+        if (Movement.traverse(NavPath.resolve(cabbage).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to cabbages");
+            botState = BotState.CABBAGE;
         }
         return random.nextLong(500, 1000);
     }
@@ -371,6 +394,55 @@ public class SkeletonScript extends LoopingScript {
             }
         }
         return random.nextLong(500, 1000);
+    }
+
+    private long handleWoodcutting(LocalPlayer player) {
+        Area.Polygonal woodcut = new Area.Polygonal(
+                new Coordinate(2995, 3191, 0),
+                new Coordinate(2991, 3191, 0),
+                new Coordinate(2989, 3194, 0),
+                new Coordinate(2985, 3200, 0),
+                new Coordinate(2974, 3205, 0),
+                new Coordinate(2974, 3211, 0),
+                new Coordinate(2984, 3211, 0),
+                new Coordinate(2985, 3258, 0),
+                new Coordinate(3007, 3268, 0),
+                new Coordinate(3010, 3217, 0),
+                new Coordinate(3005, 3200, 0));
+        if (Movement.traverse(NavPath.resolve(woodcut).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to woodcutting");
+            SceneObject tree = SceneObjectQuery.newQuery().name("Tree").results().nearest();
+            if (tree != null) {
+                Execution.delay(random.nextLong(500, 1000));
+                tree.interact("Chop down");
+            }
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private long woodcutBanking(){
+        Area.Singular bank = new Area.Singular(new Coordinate(3047,3236,0));
+        SceneObject banks = SceneObjectQuery.newQuery().name("Bank deposit box").results().nearest();
+        if (Movement.traverse(NavPath.resolve(bank).interrupt(event -> botState == BotState.IDLE)) == TraverseEvent.State.FINISHED) {
+            println("Traversed to bank");
+            if (banks != null) {
+                Execution.delay(random.nextLong(500, 1000));
+                banks.interact("Deposit");
+                Execution.delay(random.nextLong(500, 1000));
+                Bank.depositAll();
+            }
+            if (Backpack.isEmpty());{
+                botState = BotState.WOODCUT;
+            }
+        }
+        return random.nextLong(500, 1000);
+    }
+
+    private void fillBox(Item woodbox) {
+        Component woodboxComp = ComponentQuery.newQuery(1473).componentIndex(5).itemName(woodbox.getName()).option("Fill").results().first();
+        if (woodboxComp != null) {
+            println("Filled woodbox: " + woodboxComp.interact("Fill"));
+        }
     }
 
     ////////////////////Botstate/////////////////////

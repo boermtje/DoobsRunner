@@ -89,7 +89,18 @@ public class SkeletonScriptGraphicsContext extends ScriptGraphicsContext {
                         //has been clicked
                         script.setBotState(SkeletonScript.BotState.IDLE);
                     }
-                    ImGui.Text("Load preset once and then it'll use: Last Loaded Preset from");
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("Wood knot", ImGuiWindowFlag.None.getValue())) {
+                    if (ImGui.Button("Start")) {
+                        //button has been clicked
+                        script.setBotState(SkeletonScript.BotState.WOODCUT);
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button("Stop")) {
+                        //has been clicked
+                        script.setBotState(SkeletonScript.BotState.IDLE);
+                    }
                     ImGui.EndTabItem();
                 }
                 ImGui.EndTabBar();
